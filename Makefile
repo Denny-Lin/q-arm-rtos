@@ -33,8 +33,10 @@ LDFLAGS = -T linker.ld
 # --- Source files ---
 SRCS = arch/aarch64/startup.s \
        arch/aarch64/vectors.s \
+       arch/aarch64/switch.s \
        kernel/main.c \
        kernel/irq.c \
+       kernel/task.c \
        drivers/uart.c \
        drivers/timer.c \
        drivers/gic.c
