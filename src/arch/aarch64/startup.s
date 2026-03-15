@@ -2,20 +2,18 @@
 .global _start
 
 _start:
-    /* Check processor ID: only core 0 proceeds */
+    /* Read CPU ID */
     mrs     x0, mpidr_el1
     and     x0, x0, #0xFF
+    /* If not Core 0, go to infinite loop (sleep) */
     cbz     x0, master
 hang:
     wfe
     b       hang
 
 master:
-    /* Setup stack pointer */
+    /* Setup stack */
     ldr     x0, =stack_top
     mov     sp, x0
-
-    /* Clear BSS (optional but recommended) */
-    /* Jump to C main */
     bl      main
     b       hang

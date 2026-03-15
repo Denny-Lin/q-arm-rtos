@@ -1,48 +1,65 @@
+# --- Platform Configuration ---
+# Default to QEMU if no BOARD is specified
+BOARD ?= qemu_virt
+
 CROSS_COMPILE = aarch64-elf-
 CC      = $(CROSS_COMPILE)gcc
 LD      = $(CROSS_COMPILE)ld
 QEMU    = qemu-system-aarch64
 
-# Directory configuration
+# --- Board Specific Flags ---
+ifeq ($(BOARD), rpi3)
+    BOARD_FLAG = -DBOARD_RPI3
+    QEMU_CPU = cortex-a53
+else ifeq ($(BOARD), rpi4)
+    BOARD_FLAG = -DBOARD_RPI4
+    QEMU_CPU = cortex-a72
+else
+    BOARD_FLAG = -DBOARD_QEMU_VIRT
+    QEMU_CPU = cortex-a53
+endif
+
+# --- Directory Configuration ---
 SRC_DIR = src
-BUILD_DIR = build
+BUILD_DIR = build/$(BOARD)
 INC_DIR = include
 
-# Compiler flags
-CFLAGS  = -Wall -Wextra -march=armv8-a -nostdlib -nostartfiles -ffreestanding -I$(INC_DIR) -g
+# --- Compiler flags ---
+# Added $(BOARD_FLAG) to CFLAGS
+CFLAGS  = -Wall -Wextra -march=armv8-a -nostdlib -nostartfiles -ffreestanding \
+          -I$(INC_DIR) -g $(BOARD_FLAG)
 LDFLAGS = -T linker.ld
 
-# Source files (Relative to SRC_DIR)
+# --- Source files ---
 SRCS = arch/aarch64/startup.s \
        kernel/main.c \
-       drivers/uart.c
+       drivers/uart.c \
+       drivers/timer.c
 
-# Object files (Placed in BUILD_DIR)
+# --- Object files ---
 OBJS = $(addprefix $(BUILD_DIR)/, $(addsuffix .o, $(basename $(SRCS))))
 
 TARGET = $(BUILD_DIR)/q-arm-rtos.elf
 
 all: $(TARGET)
 
-# Link the kernel
 $(TARGET): $(OBJS)
 	@mkdir -p $(@D)
 	$(LD) $(LDFLAGS) $(OBJS) -o $(TARGET)
 
-# Compile Assembly files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compile C files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Run on QEMU (Using the selected CPU)
 run: $(TARGET)
-	$(QEMU) -M virt -cpu cortex-a53 -nographic -kernel $(TARGET)
+	$(QEMU) -M virt -cpu $(QEMU_CPU) -nographic -kernel $(TARGET)
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf build/
 
 .PHONY: all run clean
