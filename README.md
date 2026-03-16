@@ -13,7 +13,8 @@ q-arm-rtos is a scalable, feature-rich RTOS kernel built from scratch. This proj
 - **Task State Management**: Sophisticated scheduler supporting READY and SLEEPING states to optimize CPU utilization.
 - **Kernel Printf**: Custom implementation of formatted string output for real-time debugging.
 - **Preemptive Multitasking**: Priority-based scheduling with 10ms time-slicing and IRQ-driven context switches.
-
+- **Real-Time System Clock**: Millisecond-precision uptime tracking via `os_get_uptime()` syscall.
+- **System Call Pipeline (SVC)**: Bi-directional communication between tasks and kernel for yielding, sleeping, and resource requests.
 
 ## Technical Specifications
 
@@ -31,10 +32,10 @@ q-arm-rtos is a scalable, feature-rich RTOS kernel built from scratch. This proj
 
 ## Current Status
 
-The kernel successfully manages two independent tasks (Task A & Task B). 
-- **Task A** demonstrates cooperative multitasking using `os_sleep(1000)`.
-- **Task B** utilizes the remaining CPU time through preemptive scheduling.
-- **Memory** is dynamically managed via the kernel heap at boot time.
+The kernel demonstrates deterministic multitasking between Task A and Task B:
+- **Task A**: Fetches system uptime and enters a 1000ms blocking sleep cycle.
+- **Task B**: Background task that fills CPU idle time during Task A's sleep period.
+- **Verification**: Output shows accurate timestamped logs (e.g., [1000 ms], [2000 ms]), confirming the stability of the 10ms IRQ heartbeat and syscall return path.
 
 ## Development Environment
 
