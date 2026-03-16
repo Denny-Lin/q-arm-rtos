@@ -1,5 +1,7 @@
 #include "task.h"
 #include "uart.h"
+#include "printf.h" 
+#include "os.h"
 
 /* Pre-allocate stacks for 2 tasks (16KB each) */
 uint64_t task_stack_a[2048] __attribute__((aligned(16)));
@@ -30,18 +32,32 @@ void task_init_context(tcb_t *tcb, uint64_t *stack_top, void (*func)(void)) {
 
 
 
-// IMPORTANT: Simplify tasks for testing
+/**
+ * Task A: Demonstrates System Clock and Blocking Sleep
+ * 
+ * 1. Fetches current system uptime via SVC ID 2.
+ * 2. Prints formatted timestamp using kernel printf.
+ * 3. Enters SLEEPING state via SVC ID 1, yielding CPU for 1000ms.
+ */
 void task_a(void) {
     while (1) {
-        uart_puts("A"); 
+        /* Request system uptime from kernel (Unit: ms) */
+        uint64_t now = os_get_uptime();
 
-        asm volatile ("svc #0"); 
+        /* Print timestamped message */
+        printf("\n[%d ms] Task A: Hello from RTOS!\n", now);
 
-        for (volatile int i = 0; i < 2000000; i++); // Busy wait
-        // REMOVE manual cpu_switch_to here!
+        /* Block task for 1 second (100 system ticks) */
+        os_sleep(1000); 
     }
 }
 
+/**
+ * Task B: Background Task
+ * 
+ * Demonstrates preemptive multitasking. While Task A is sleeping,
+ * the scheduler gives all remaining CPU cycles to Task B.
+ */
 void task_b(void) {
     while (1) {
         uart_puts("B");

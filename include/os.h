@@ -28,3 +28,14 @@ static inline void os_sleep(uint32_t ms) {
 
 #endif
 
+static inline uint64_t os_get_uptime(void) {
+    uint64_t ms;
+    asm volatile (
+        "mov x8, #2\n"    /* Syscall ID 2 */
+        "svc #0\n"
+        "mov %0, x0\n"    /* The kernel placed the result in x0 */
+        : "=r"(ms)        /* Output to 'ms' variable */
+        : : "x8", "x0"    /* Clobbers */
+    );
+    return ms;
+}
