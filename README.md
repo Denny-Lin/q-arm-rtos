@@ -8,11 +8,12 @@ q-arm-rtos is a scalable, feature-rich RTOS kernel built from scratch. This proj
 
 ## Core Features (Achieved)
 
-- **Preemptive Multitasking**: Priority-based scheduling with 10ms time-slicing.
-- **Full Context Switching**: Complete saving and restoration of AArch64 registers (x0-x30), ELR_EL1, and SPSR_EL1.
-- **Interrupt Pipeline**: Integrated support for GICv2 (Generic Interrupt Controller) and AArch64 Generic Timer.
-- **Exception Vector Table**: Robust handling of IRQ and synchronous exceptions in EL1.
-- **Multi-Board Support**: Common hardware abstraction layer (HAL) for QEMU and Raspberry Pi.
+- **System Call Pipeline (SVC)**: Robust `svc #0` handling with parameter passing for `os_yield()` and `os_sleep(ms)`.
+- **Dynamic Memory Allocation**: Integrated Kernel Heap with 16-byte aligned `kmalloc()` supporting AArch64 hardware requirements.
+- **Task State Management**: Sophisticated scheduler supporting READY and SLEEPING states to optimize CPU utilization.
+- **Kernel Printf**: Custom implementation of formatted string output for real-time debugging.
+- **Preemptive Multitasking**: Priority-based scheduling with 10ms time-slicing and IRQ-driven context switches.
+
 
 ## Technical Specifications
 
@@ -24,11 +25,16 @@ q-arm-rtos is a scalable, feature-rich RTOS kernel built from scratch. This proj
 
 ## Directory Structure
 
-- `src/arch/aarch64/`: Boot code, Exception Vectors, and Context Switching logic.
-- `src/drivers/`: Peripheral drivers (UART, Generic Timer, GICv2).
-- `src/kernel/`: Kernel entry, IRQ dispatcher, and Task management.
-- `include/`: Header files and hardware register definitions.
-- `build/`: Compilation artifacts categorized by target board.
+- `src/arch/aarch64/`: Boot code, Exception Vectors (Macros), and Context Switching logic.
+- `src/kernel/`: IRQ dispatcher, Syscall handlers, Task management, and Memory allocation.
+- `include/`: Kernel APIs (`os.h`), Task structures, and hardware register definitions.
+
+## Current Status
+
+The kernel successfully manages two independent tasks (Task A & Task B). 
+- **Task A** demonstrates cooperative multitasking using `os_sleep(1000)`.
+- **Task B** utilizes the remaining CPU time through preemptive scheduling.
+- **Memory** is dynamically managed via the kernel heap at boot time.
 
 ## Development Environment
 
